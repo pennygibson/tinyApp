@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+</head>
+<body>
+<header>
+  <% include ./partials/_header %>
+</header>
+
+      <h2> ShortURL: <%= shortURL %>  </h2>
+      <form action="/urls/<%= shortURL %>/update" method="POST" style="">
+        <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
+        <button type="submit">Update</button>
+      </form>
+
+    <!-- Add your EJS code here -->
+</body>
+</html>

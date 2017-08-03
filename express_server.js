@@ -54,7 +54,7 @@ app.get("/urls", (req, res) =>{
   if(req.cookies.user_id){
 
     let userId = req.cookies.user_id
-    let user = users[userid]
+    let user = users[userId]
 
     let templateVars = {
       user: user,
@@ -140,7 +140,15 @@ app.post("/urls/:id/update",(req, res) =>{
 })
 
 app.post("/login", (req, res) =>{
-  res.cookie('user_id', req.body.email)
+  //res.cookie('user_id', req.body.email)
+
+  for(let i in users) {
+   if(users[i].email === req.body.email){
+    if(users[i].password === req.body.password){
+      res.cookie('user_id', i)
+    }
+   }
+  }
 
   res.redirect("/urls")
 })

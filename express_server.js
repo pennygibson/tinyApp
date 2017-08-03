@@ -14,6 +14,19 @@ var urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "UserRandomID": {
+    id: "UserRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "User2RandomID": {
+    id: "User2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
+
 function generateRandomString(){
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -32,26 +45,79 @@ app.get("/urls.json", (req, res) =>{
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.end("<html><body>Hello <b> World</b></body></html>\n");
-});
 
 // app.get("/urls", (req, res) =>{
 //   let templateVars = { urls: urlDatabase};
 //   res.render("urls_index", templateVars);
 // })
 app.get("/urls", (req, res) =>{
-  let templateVars = {
-  username: req.cookies["username"],
-   urls: urlDatabase
-  }
-console.log('***********',templateVars)
-res.render("urls_index", templateVars);
+  if(req.cookies.user_id){
+
+    let userId = req.cookies.user_id
+    let user = users[userid]
+
+    let templateVars = {
+      user: user,
+      urls: urlDatabase
+    }
+    res.render("urls_index", templateVars);
+ } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user: ""
+    }
+    res.render("urls_index", templateVars);
+ }
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let userId = req.cookies.user_id
+  let user = users[userid]
+
+  let templateVars = {
+    user: user
+  }
+  res.render("urls_new", templateVars);
 });
+
+app.get("/register", (req, res) =>{
+
+  res.render("register");
+})
+
+app.get("/login", (req, res) =>{
+
+  res.render("login");
+});
+
+app.post("/register", (req, res) =>{
+  let email = req.body.email;
+  let password = req.body.password;
+  let userId = generateRandomString();
+
+
+  const userIdKeys = Object.keys(users) //turns the keys of users{} into an array
+  for(let i = 0; i < userIdKeys.length; i++){
+    const loopedKey = (userIdKeys[i]) //gets the user id for each object
+    const existingEmail = users[loopedKey]["email"]//returns the emails already in the object
+
+
+  if(existingEmail === email || email === "" || password === ""){
+    res.status(400).send("Please enter a valid email and password")
+    return
+  }
+}//end of the for loop
+  users[userId] = {
+    id: userId,
+    email: email,
+    password: password
+  }
+
+  //set the cookie
+  res.cookie('user_id', userId)
+  //redirect to home
+  res.redirect("urls/")
+})
 
 
 app.post("/urls", (req, res) => {
@@ -73,14 +139,14 @@ app.post("/urls/:id/update",(req, res) =>{
   res.redirect("/urls")
 })
 
-app.post("/urls/login", (req, res) =>{
-  res.cookie('username', req.body.username)
+app.post("/login", (req, res) =>{
+  res.cookie('user_id', req.body.email)
 
   res.redirect("/urls")
 })
 
 app.post("/urls/logout", (req, res) =>{
-  res.clearCookie('username', req.body.logout)
+  res.clearCookie('user_id', req.body.logout)
 
   res.redirect("/urls")
 })

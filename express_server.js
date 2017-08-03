@@ -72,12 +72,16 @@ app.get("/urls", (req, res) =>{
 
 app.get("/urls/new", (req, res) => {
   let userId = req.cookies.user_id
-  let user = users[userid]
+  let user = users[userId]
 
   let templateVars = {
     user: user
   }
+  if (!users[req.cookies.user_id]){
+    res.redirect('/login')
+  } else {
   res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/register", (req, res) =>{
@@ -115,6 +119,7 @@ app.post("/register", (req, res) =>{
 
   //set the cookie
   res.cookie('user_id', userId)
+  //user_id is naming the cookie
   //redirect to home
   res.redirect("urls/")
 })
@@ -171,7 +176,8 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    longURL: urlDatabase[req.params.id],
+    user: users[req.cookies.user_id]
   };
   res.render("urls_show", templateVars);
 });

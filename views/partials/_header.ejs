@@ -2,9 +2,16 @@
 <h1>Tiny App</h1>
 
 
+<a href="/register">Register</a>
+
+<% if (!user) { %>
+<a href="/login">Log In</a>
+<% } %>
+
 
 <% if (user) { %>
 <p><%=user.email%></p>
+
 
 <form action="/logout" method="POST" style="">
 

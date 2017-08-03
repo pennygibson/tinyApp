@@ -143,17 +143,19 @@ app.post("/login", (req, res) =>{
   //res.cookie('user_id', req.body.email)
 
   for(let i in users) {
-   if(users[i].email === req.body.email){
-    if(users[i].password === req.body.password){
-      res.cookie('user_id', i)
+   if(users[i].email != req.body.email){
+    if(users[i].password != req.body.password){
+      res.status(403).send("The email and password do not match")
+      return
     }
+   } else {
+    res.cookie('user_id', i)
+    res.redirect("/")
    }
   }
-
-  res.redirect("/urls")
 })
 
-app.post("/urls/logout", (req, res) =>{
+app.post("/logout", (req, res) =>{
   res.clearCookie('user_id', req.body.logout)
 
   res.redirect("/urls")

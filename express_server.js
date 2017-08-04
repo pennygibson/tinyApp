@@ -1,31 +1,43 @@
+// Import Requirements (app dependencies)
 var express = require("express");
 var app = express();
 var PORT = process.env.PORT || 8080; //
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 
+// Setup Express Middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
+// Tell Express to use ejs
 app.set("view engine", "ejs");
 
+
+// Database setup
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: "UserRandomID"
+  }
+  // "9sm5xK": "http://www.google.com"
+  //userID:{}
+
 };
 
-const users = {
+var users = {
   "UserRandomID": {
     id: "UserRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
   "User2RandomID": {
-    id: "User2RandomID",
+    id: "UserRandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
 }
+
+// Helper Functions
 
 function generateRandomString(){
   var text = "";
@@ -37,10 +49,30 @@ function generateRandomString(){
   return text;
 }
 
+// find all the links for a given user id
+function urlsForUser(id){
+  // create an object to hold our results
+  let userLinks = {}
+  // loop through all the links in our database
+  for(var links in urlDatabase){
+    // if the link belongs to the user
+    if(urlDatabase[links].userId === id){
+      // save it to our results object
+      userLinks[links] = urlDatabase[links];
+    }
+  }
+  // return our results
+  return userLinks
+}
+
+// Express server router
+
+// Home route (http://localhost:8080/)
 app.get("/", (req, res) => {
   res.end("Hello!");
 });
 
+// Get URLs Database as JSON.
 app.get("/urls.json", (req, res) =>{
   res.json(urlDatabase);
 });
@@ -50,50 +82,16 @@ app.get("/urls.json", (req, res) =>{
 //   let templateVars = { urls: urlDatabase};
 //   res.render("urls_index", templateVars);
 // })
-app.get("/urls", (req, res) =>{
-  if(req.cookies.user_id){
 
-    let userId = req.cookies.user_id
-    let user = users[userId]
+// -------- USER ROUTES (Login/Register/Logout) ----------------
 
-    let templateVars = {
-      user: user,
-      urls: urlDatabase
-    }
-    res.render("urls_index", templateVars);
- } else {
-    let templateVars = {
-      urls: urlDatabase,
-      user: ""
-    }
-    res.render("urls_index", templateVars);
- }
-});
 
-app.get("/urls/new", (req, res) => {
-  let userId = req.cookies.user_id
-  let user = users[userId]
-
-  let templateVars = {
-    user: user
-  }
-  if (!users[req.cookies.user_id]){
-    res.redirect('/login')
-  } else {
-  res.render("urls_new", templateVars);
-  }
-});
-
+// GET /register - Show registration form
 app.get("/register", (req, res) =>{
-
   res.render("register");
 })
 
-app.get("/login", (req, res) =>{
-
-  res.render("login");
-});
-
+// POST /register - Process the registration, taking user input and saving a user to our database.
 app.post("/register", (req, res) =>{
   let email = req.body.email;
   let password = req.body.password;
@@ -106,11 +104,11 @@ app.post("/register", (req, res) =>{
     const existingEmail = users[loopedKey]["email"]//returns the emails already in the object
 
 
-  if(existingEmail === email || email === "" || password === ""){
-    res.status(400).send("Please enter a valid email and password")
-    return
-  }
-}//end of the for loop
+    if(existingEmail === email || email === "" || password === ""){
+      res.status(400).send("Please enter a valid email and password")
+      return
+    }
+  }//end of the for loop
   users[userId] = {
     id: userId,
     email: email,
@@ -118,69 +116,154 @@ app.post("/register", (req, res) =>{
   }
 
   //set the cookie
-  res.cookie('user_id', userId)
-  //user_id is naming the cookie
+  res.cookie('userId', userId)
+  //userId is naming the cookie
   //redirect to home
-  res.redirect("urls/")
+  res.redirect("/urls")
 })
 
+// GET /login - Show login form
+app.get("/login", (req, res) =>{
 
+  res.render("login");
+});
+
+// POST /login - Process a login.
+app.post("/login", (req, res) =>{
+
+  //res.cookie('userId', req.body.email)
+  for(let i in users) {
+    if(users[i].email === req.body.email){
+      if(users[i].password === req.body.password){
+        res.cookie('userId', i)
+        res.redirect("/")
+        return
+      }
+    }
+  }
+  res.status(403).send("Email and password are not matching")
+})
+
+// POST /logout - Process logout
+app.post("/logout", (req, res) => {
+  res.clearCookie('userId', req.body.logout)
+
+  res.redirect("/urls")
+})
+
+/*
+
+
+var urlDatabase = {
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userd: "UserRandomID"
+  }
+
+};
+
+*/
+
+// ---------------- URL Routes (CRUD for URLs) -----------------------
+
+// GET /urls - Get the logged in user urls. If not logged in redirects to /register.
+app.get("/urls", (req, res) =>{
+  if(req.cookies.userId){
+
+    let userId = req.cookies.userId
+    let user = users[userId]
+
+    let templateVars = {
+      user: req.cookies.userId,
+      urls: urlDatabase
+    }
+    res.render("urls_index", templateVars);
+ } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user: ""
+    }
+    res.redirect("/register");
+ }
+});
+
+// GET /urls/new - Show the new URL form to the user.
+app.get("/urls/new", (req, res) => {
+  let userId = req.cookies.userId
+  let user = users[userId]
+
+  let templateVars = {
+    user: user
+  }
+  if (!user){
+    res.redirect('/login');
+  } else {
+    res.render("urls_new", templateVars);
+  }
+});
+
+// POST /urls - Process a new url to be added to the urlsDatabase.
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-
-  res.redirect("urls/" + shortURL);
-});
-
-app.post("/urls/:id/delete", (req, res) =>{
-  delete urlDatabase[req.params.id]
-  res.redirect("/urls")
-});
-
-app.post("/urls/:id/update",(req, res) =>{
-  urlDatabase[req.params.id] = req.body.longURL;
-
-  res.redirect("/urls")
-})
-
-app.post("/login", (req, res) =>{
-  //res.cookie('user_id', req.body.email)
-
-  for(let i in users) {
-   if(users[i].email != req.body.email){
-    if(users[i].password != req.body.password){
-      res.status(403).send("The email and password do not match")
-      return
-    }
-   } else {
-    res.cookie('user_id', i)
-    res.redirect("/")
-   }
+  // urlDatabase[shortURL] = req.bodylongURL;
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userId: req.cookies.userId   // TODO: don't hardlode user
   }
-})
 
-app.post("/logout", (req, res) =>{
-  res.clearCookie('user_id', req.body.logout)
+  res.redirect("/urls");
+});
+
+
+// POST /urls/b2xVn2/delete - Delete a url from the URLs Database
+app.post("/urls/:id/delete", (req, res) =>{
+
+   console.log(urlDatabase[req.params.id])
+   const urlObject = urlDatabase[req.params.id] //this gets the key of the urlDatabase object
+   console.log(req.cookies)
+  if(urlObject.userId === req.cookies.userId) {
+    delete urlDatabase[req.params.id]
+    }
+    res.redirect("/urls")
+});
+
+// POST /urls/b2xVn2/update - Change the longURL of the given shortURL.
+app.post("/urls/:id/update",(req, res) =>{
+  const urlObject = urlDatabase[req.params.id]
+  if(urlObject.userId === req.cookies.userId) {
+    urlDatabase[req.params.id] = {
+      longURL: req.body.longURL,
+      userId: urlObject.userId
+    }
+  }
+  console.log(urlDatabase);
 
   res.redirect("/urls")
 })
 
-
-
-app.get("/u/:shortURL", (req, res) => {
-   let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
-});
-
+// GET /urls/b2xVn2 - View details of a single URL
 app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user: users[req.cookies.user_id]
+    user: users[req.cookies.userId]
   };
   res.render("urls_show", templateVars);
 });
+
+
+// ------------------ Redirect to Long URL -----------------------
+
+
+// GET /u/b2xVn2 - Redirect to the longURL associated to the shortURL.
+app.get("/u/:shortURL", (req, res) => {
+   let longURL = urlDatabase[req.params.shortURL];
+   res.redirect(longURL);
+});
+
+
+// Run the server on the given PORT
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);

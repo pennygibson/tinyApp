@@ -8,11 +8,15 @@
    <header>
   <% include ./partials/_header %>
 </header>
-  <ul><% for(var key in urls) { %>
-        <li><%= key %> - <%= urls[key] %></li>
-        <form method="POST" action="/urls/<%=key%>/delete"><button> Delete</button></form>
-      <% }; %>
-
+  <ul>
+    <% for(var key in urls) { %>
+      <li>
+        <a href="/urls/<%= key %>">
+          <%= key %> - <%= urls[key].longURL %>
+        </a>
+      </li>
+      <form method="POST" action="/urls/<%=key%>/delete"><button> Delete</button></form>
+    <% }; %>
   </ul>
 
 

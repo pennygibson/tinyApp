@@ -3,11 +3,17 @@ var express = require("express");
 var app = express();
 var PORT = process.env.PORT || 8080; //
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session')
+const bcrypt = require('bcrypt');
+
 
 // Setup Express Middleware
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['sessionKey'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 // Tell Express to use ejs
 app.set("view engine", "ejs");
@@ -77,12 +83,6 @@ app.get("/urls.json", (req, res) =>{
   res.json(urlDatabase);
 });
 
-
-// app.get("/urls", (req, res) =>{
-//   let templateVars = { urls: urlDatabase};
-//   res.render("urls_index", templateVars);
-// })
-
 // -------- USER ROUTES (Login/Register/Logout) ----------------
 
 
@@ -95,6 +95,7 @@ app.get("/register", (req, res) =>{
 app.post("/register", (req, res) =>{
   let email = req.body.email;
   let password = req.body.password;
+  let hashed_password = bcrypt.hashSync(password, 10);
   let userId = generateRandomString();
 
 
@@ -108,15 +109,15 @@ app.post("/register", (req, res) =>{
       res.status(400).send("Please enter a valid email and password")
       return
     }
-  }//end of the for loop
+  }
   users[userId] = {
     id: userId,
     email: email,
-    password: password
+    password: hashed_password
   }
 
   //set the cookie
-  res.cookie('userId', userId)
+  req.session.userId = userId;
   //userId is naming the cookie
   //redirect to home
   res.redirect("/urls")
@@ -134,8 +135,8 @@ app.post("/login", (req, res) =>{
   //res.cookie('userId', req.body.email)
   for(let i in users) {
     if(users[i].email === req.body.email){
-      if(users[i].password === req.body.password){
-        res.cookie('userId', i)
+      if (bcrypt.compareSync(req.body.password, hashed_password)) {
+        req.session.userId = i
         res.redirect("/")
         return
       }
@@ -146,35 +147,23 @@ app.post("/login", (req, res) =>{
 
 // POST /logout - Process logout
 app.post("/logout", (req, res) => {
-  res.clearCookie('userId', req.body.logout)
-
+  req.session = null
   res.redirect("/urls")
 })
 
-/*
 
-
-var urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userd: "UserRandomID"
-  }
-
-};
-
-*/
 
 // ---------------- URL Routes (CRUD for URLs) -----------------------
 
 // GET /urls - Get the logged in user urls. If not logged in redirects to /register.
 app.get("/urls", (req, res) =>{
-  if(req.cookies.userId){
+  if(req.session.userId){
 
-    let userId = req.cookies.userId
+    let userId = req.session.userId
     let user = users[userId]
 
     let templateVars = {
-      user: req.cookies.userId,
+      user: req.session.userId,
       urls: urlDatabase
     }
     res.render("urls_index", templateVars);
@@ -189,7 +178,7 @@ app.get("/urls", (req, res) =>{
 
 // GET /urls/new - Show the new URL form to the user.
 app.get("/urls/new", (req, res) => {
-  let userId = req.cookies.userId
+  let userId = req.session.userId;
   let user = users[userId]
 
   let templateVars = {
@@ -209,7 +198,7 @@ app.post("/urls", (req, res) => {
   // urlDatabase[shortURL] = req.bodylongURL;
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    userId: req.cookies.userId   // TODO: don't hardlode user
+    userId: req.session.userId   // TODO: don't hardlode user
   }
 
   res.redirect("/urls");
@@ -219,10 +208,9 @@ app.post("/urls", (req, res) => {
 // POST /urls/b2xVn2/delete - Delete a url from the URLs Database
 app.post("/urls/:id/delete", (req, res) =>{
 
-   console.log(urlDatabase[req.params.id])
+
    const urlObject = urlDatabase[req.params.id] //this gets the key of the urlDatabase object
-   console.log(req.cookies)
-  if(urlObject.userId === req.cookies.userId) {
+   if(urlObject.userId === req.session.userId) {
     delete urlDatabase[req.params.id]
     }
     res.redirect("/urls")
@@ -231,7 +219,7 @@ app.post("/urls/:id/delete", (req, res) =>{
 // POST /urls/b2xVn2/update - Change the longURL of the given shortURL.
 app.post("/urls/:id/update",(req, res) =>{
   const urlObject = urlDatabase[req.params.id]
-  if(urlObject.userId === req.cookies.userId) {
+  if(urlObject.userId === req.session.userId) {
     urlDatabase[req.params.id] = {
       longURL: req.body.longURL,
       userId: urlObject.userId

@@ -1,24 +1,33 @@
 
-<h1>Tiny App</h1>
 
 
-<a href="/register">Register</a>
-
-<% if (!user) { %>
-<a href="/login">Log In</a>
-<% } %>
-
-
-<% if (user) { %>
-<p><%=user.email%></p>
+  <div class="headWrapper">
+    <h1 id="mainHeader">Welcome to Tiny App</h1>
+    <p class="shrinkText">Because shrinkage can be a good thing</p>
+  </div>
 
 
-<form action="/logout" method="POST" style="">
 
-      <button type="submit">Log Out</button>
-    </form>
 
-    <% } %>
+ <div class="buttonWrap">
+  <% if (!user) { %>
+    <a href="/register"><button class="submitButton">Register</button></a>
+    <a href="/login" ><button class="submitButton">Log In</button></a>
+  <% } %>
+
+
+  <% if (user) { %>
+      <p class="userName"><%=user.email%></p>
+
+
+      <form action="/logout" method="POST" style="">
+
+        <p><input type="submit" class="submitButton" value="logout"></p>
+
+      </form>
+
+   <% } %>
+   </div>
 
 
 

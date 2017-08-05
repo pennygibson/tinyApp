@@ -5,10 +5,12 @@ var PORT = process.env.PORT || 8080; //
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 
 // Setup Express Middleware
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static('public'));
 app.use(cookieSession({
   name: 'session',
   keys: ['sessionKey'],
@@ -20,28 +22,10 @@ app.set("view engine", "ejs");
 
 
 // Database setup
-var urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userId: "UserRandomID"
-  }
-  // "9sm5xK": "http://www.google.com"
-  //userID:{}
+var urlDatabase = {};
 
-};
+var users = {};
 
-var users = {
-  "UserRandomID": {
-    id: "UserRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "User2RandomID": {
-    id: "UserRandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
-  }
-}
 
 // Helper Functions
 
@@ -75,7 +59,13 @@ function urlsForUser(id){
 
 // Home route (http://localhost:8080/)
 app.get("/", (req, res) => {
-  res.end("Hello!");
+  //if the user is not logged in redirect to login
+  //if the user IS logged in redirect to urls
+  if(req.session.userId){
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login")
+ }
 });
 
 // Get URLs Database as JSON.
@@ -88,7 +78,11 @@ app.get("/urls.json", (req, res) =>{
 
 // GET /register - Show registration form
 app.get("/register", (req, res) =>{
-  res.render("register");
+  let templateVars = {
+      user: req.session.userId,
+      urls: urlDatabase
+    }
+  res.render("register", templateVars);
 })
 
 // POST /register - Process the registration, taking user input and saving a user to our database.
@@ -104,7 +98,7 @@ app.post("/register", (req, res) =>{
     const loopedKey = (userIdKeys[i]) //gets the user id for each object
     const existingEmail = users[loopedKey]["email"]//returns the emails already in the object
 
-
+    console.log(existingEmail)
     if(existingEmail === email || email === "" || password === ""){
       res.status(400).send("Please enter a valid email and password")
       return
@@ -125,8 +119,11 @@ app.post("/register", (req, res) =>{
 
 // GET /login - Show login form
 app.get("/login", (req, res) =>{
-
-  res.render("login");
+  let templateVars = {
+      user: req.session.userId,
+      urls: urlDatabase
+    }
+  res.render("login", templateVars);
 });
 
 // POST /login - Process a login.
@@ -135,9 +132,9 @@ app.post("/login", (req, res) =>{
   //res.cookie('userId', req.body.email)
   for(let i in users) {
     if(users[i].email === req.body.email){
-      if (bcrypt.compareSync(req.body.password, hashed_password)) {
+      if (bcrypt.compareSync(req.body.password, users[i].password)) {
         req.session.userId = i
-        res.redirect("/")
+        res.redirect("/urls")
         return
       }
     }
@@ -158,22 +155,18 @@ app.post("/logout", (req, res) => {
 // GET /urls - Get the logged in user urls. If not logged in redirects to /register.
 app.get("/urls", (req, res) =>{
   if(req.session.userId){
-
     let userId = req.session.userId
-    let user = users[userId]
+    let userURLS = urlsForUser(userId)
+
 
     let templateVars = {
       user: req.session.userId,
-      urls: urlDatabase
+      urls: userURLS
     }
     res.render("urls_index", templateVars);
- } else {
-    let templateVars = {
-      urls: urlDatabase,
-      user: ""
-    }
+  }
+
     res.redirect("/register");
- }
 });
 
 // GET /urls/new - Show the new URL form to the user.
@@ -235,7 +228,7 @@ app.get("/urls/:id", (req, res) => {
   let templateVars = {
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id],
-    user: users[req.cookies.userId]
+    user: users[req.session.userId]
   };
   res.render("urls_show", templateVars);
 });
@@ -246,15 +239,21 @@ app.get("/urls/:id", (req, res) => {
 
 // GET /u/b2xVn2 - Redirect to the longURL associated to the shortURL.
 app.get("/u/:shortURL", (req, res) => {
-   let longURL = urlDatabase[req.params.shortURL];
-   res.redirect(longURL);
+  console.log(req.params)
+   let urlInfo = urlDatabase[req.params.shortURL];
+   // console.log(urlDatabase)
+   // console.log(req.params.shortURL)
+   // console.log(longURL)
+   res.redirect(urlInfo.longURL);
+   // res.send(longURL)
+
 });
 
 
 // Run the server on the given PORT
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Example app listening on port ${PORT}!, :) :)`);
 });
 
 

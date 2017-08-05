@@ -3,21 +3,30 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
+  <link href="https://fonts.googleapis.com/css?family=Lobster|Raleway" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="./main.css">
 </head>
 <body>
    <header>
   <% include ./partials/_header %>
-</header>
-  <ul>
-    <% for(var key in urls) { %>
-      <li>
-        <a href="/urls/<%= key %>">
-          <%= key %> - <%= urls[key].longURL %>
-        </a>
-      </li>
-      <form method="POST" action="/urls/<%=key%>/delete"><button> Delete</button></form>
-    <% }; %>
-  </ul>
+  </header>
+  <div class="wrapper">
+
+      <h2> Your Custom Urls </h2>
+        <ul>
+          <% for(var key in urls) { %>
+            <li>
+              <a href="/urls/<%= key %>" id="urlLinks">
+                <%= urls[key].longURL %> = <%= key %>
+              </a>
+
+            </li>
+            <form method="POST" action="/urls/<%=key%>/delete"><button> Delete URL</button></form>
+          <% }; %>
+          <p><a href="/urls/new" class="submitButton">Add New Url</a></p>
+        </ul>
+
+        </div>
 
 
 </body>

@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
+    <link href="https://fonts.googleapis.com/css?family=Lobster|Raleway" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="./main.css">
   </head>
-  <body style="font-size:20px; padding:50px;">
+  <body>
     <header>
 
     </header>
+    <div class="wrapper">
+      <div class="subWrapper">
+      <h1 class="signUpHeader">log in to my account</h1>
+      <p class="shrinkText">shrinkage isn't always bad </p>
 
-    <form action="/login" method="POST" style="">
-      <input id="email" type="email" name="email" placeholder="email" style="width: 300px">
-      <input id="password" type="password" name="password" placeholder="password" style="width: 300px">
-      <button type="submit">Log In</button>
-    </form>
+      <form action="/login" method="POST" style="">
+          <p><input id="email" type="email" name="email" placeholder="email"></p>
+          <p><input id="password" type="password" name="password" placeholder="password"></p>
+          <p><input type="submit" class="submitButton" value="login"></p>
+          <p> Not signed up yet? </p>
+          <a href="/register" class="submitButton">Register Here</a>
+      </form>
+      </div>
+    </div>
 
 
 

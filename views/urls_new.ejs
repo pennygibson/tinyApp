@@ -1,15 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head></head>
-  <body style="font-size:20px; padding:50px;">
-
+  <head>
+    <link href="https://fonts.googleapis.com/css?family=Lobster|Raleway" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/main.css">
+  </head>
+  <body>
     <% include ./partials/_header %>
+  <div class="wrapper">
+    <div class="subWrapper">
 
-    <form action="/urls" method="POST" style="margin: 20px;">
-      <label for="longURL">Enter a URL:</label>
-      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
-      <input type="submit" value="Submit">
-    </form>
+      <h2> Add to My Urls </h2>
+
+      <form action="/urls" method="POST">
+          <p><label for="longURL">Enter a URL:</label></p>
+          <input id="longURL" type="text" name="longURL" placeholder="http://" required="true">
+          <p><input type="submit" value="Submit" class="submitButton"></p>
+      </form>
+      </div>
+
+    </div>
 
   </body>
 </html>
+
+<!-- <body style="font-size:20px; padding:50px;"-->

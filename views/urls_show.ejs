@@ -3,18 +3,26 @@
 <html lang="en">
 <head>
   <title>TinyApp</title>
+  <link href="https://fonts.googleapis.com/css?family=Lobster|Raleway" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="/main.css">
 </head>
 <body>
-<header>
-  <% include ./partials/_header %>
-</header>
+  <header>
+    <% include ./partials/_header %>
+  </header>
+    <div class="wrapper">
+      <div class="subWrapper">
+        <h2> <%=user.email%>'s custom URLs </h2>
 
-      <h2> ShortURL: <%= shortURL %>  </h2>
-      <h2> LongURL: <%= longURL.longURL %>  </h2>
-      <form action="/urls/<%= shortURL %>/update" method="POST" style="">
-        <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
-        <button type="submit">Update</button>
-      </form>
+          <p> Tiny URL: <%= shortURL %>  </p>
+          <p> Original: <%= longURL.longURL %>  </p>
+
+          <form action="/urls/<%= shortURL %>/update" method="POST">
+            <input id="longURL" type="text" name="longURL" placeholder="http://">
+            <p><button type="submit">Update</button></p>
+          </form>
+        </div>
+    </div>
 
     <!-- Add your EJS code here -->
 </body>

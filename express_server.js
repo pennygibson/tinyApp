@@ -220,7 +220,8 @@ app.post("/urls/:id/update",(req, res) =>{
   }
   console.log(urlDatabase);
 
-  res.redirect("/urls")
+  res.redirect("/urls/" + req.params.id)
+
 })
 
 // GET /urls/b2xVn2 - View details of a single URL
@@ -241,11 +242,8 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   console.log(req.params)
    let urlInfo = urlDatabase[req.params.shortURL];
-   // console.log(urlDatabase)
-   // console.log(req.params.shortURL)
-   // console.log(longURL)
    res.redirect(urlInfo.longURL);
-   // res.send(longURL)
+
 
 });
 

@@ -4,7 +4,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["Main registration page, if you already have an account log in"]()
+!["Main registration page, if you already have an account log in"](https://github.com/pennygibson/tinyApp/blob/master/docs/mainRegistration.png)
 !["Login to your account"]()
 !["Update your URLs"]()
 
